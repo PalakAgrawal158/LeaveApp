@@ -1,7 +1,6 @@
 from django.db import models
 
 # Create your models here.
-
 class Leaves(models.Model):
     
     LEAVE_STATUS_CHOICES= [(0, 'Pending for approval'),

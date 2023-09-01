@@ -5,13 +5,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.http import JsonResponse
 from employee.models import CustomUser
-from leave.scheduling import cron_jobs, cron_jobs_delete
 from leave.models import Leaves
 from Email.email_sender import SendEmail
 from employee.views import decode_token
 from rest_framework.decorators import api_view
 # Create your views here.
-
 
 class AddLeave(APIView):
     permission_classes = [IsAuthenticated]
@@ -108,7 +106,7 @@ class ApproveLeave(APIView):
                     leave.save()
                     SendEmail(str(leave.employee), leave.leave_status_text)
                     print("from update",leave.leave_status)
-                    cron_jobs(leave_id)
+                    
                     
                     return JsonResponse({"message" : "Leave status updated"}, status=200)
                 else:
@@ -160,7 +158,6 @@ class DeleteLeave(APIView):
                 leave.leave_status=5
                 leave.save()
                 SendEmail(str(leave.employee), leave.leave_status_text)          
-                cron_jobs_delete(leave_id)
                 return JsonResponse({"message" : "Leave delete successfully"}, status=200)
         
         except Leaves.DoesNotExist:

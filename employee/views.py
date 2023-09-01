@@ -106,3 +106,17 @@ def decode_token(request):
                 print('Error------>',error)
                 return False
 
+
+
+class ListEmployeesByManager(APIView):
+    def get(self,request,manager_id):
+        try:
+            employees = CustomUser.objects.filter(manager=manager_id)
+            if employees:
+                serializer = CustomUserSerializer(employees, many=True)
+                return JsonResponse({"data":serializer.data},status=200)
+            else:
+                return JsonResponse({""})
+        except Exception as error:
+            print(error)
+            return JsonResponse({"error":str(error)},status=500)
