@@ -116,7 +116,7 @@ class ListEmployeesByManager(APIView):
                 serializer = CustomUserSerializer(employees, many=True)
                 return JsonResponse({"data":serializer.data},status=200)
             else:
-                return JsonResponse({""})
+                return JsonResponse({"message":"No employees available with this manager"},status=404)
         except Exception as error:
             print(error)
             return JsonResponse({"error":str(error)},status=500)

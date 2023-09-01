@@ -31,9 +31,12 @@ class AddLeave(APIView):
             if serializer.is_valid():
                 manager_email= user.manager
                 
-                serializer.save(employee=user)
+                leave=serializer.save(employee=user)
+                print(serializer.data)
+                print("llll",leave)
+
                 default_leave_text = Leaves._meta.get_field('leave_status_text').default
-                SendEmail(str(manager_email), default_leave_text)
+                SendEmail(str(manager_email), leave)
                 return JsonResponse({'message' : 'Leave added successfully'},status=200) 
             else:
                 return JsonResponse({"error": serializer.errors},status=400)  
@@ -42,7 +45,7 @@ class AddLeave(APIView):
         except Exception as error:
             return JsonResponse({"error": str(error)},status=500)
         
-
+# manager can retrieve all pending leaves
 class ViewPendingLeaves(APIView): 
     permission_classes=[IsAuthenticated]
       
@@ -75,8 +78,8 @@ class ViewPendingLeaves(APIView):
             return JsonResponse({"error": str(error)}, status=500)
         
 
-# To approve leave by  manager only
-class ApproveLeave(APIView):
+# To approve/reject leave by  manager only
+class ApproveRejectLeave(APIView):
     def put(self, request):
         try:
             # Decode token
@@ -96,48 +99,38 @@ class ApproveLeave(APIView):
 
                 if serializer.is_valid():
                     leave_id = serializer.validated_data.get('leave_id')
-                    
-                    try:
-                        leave = Leaves.objects.get(pk=leave_id)
-                    except Leaves.DoesNotExist:
-                        return JsonResponse({"error" : "Leave does not exist"}, status=404)
-                    
-                    leave.leave_status = 1
-                    leave.save()
-                    SendEmail(str(leave.employee), leave.leave_status_text)
-                    print("from update",leave.leave_status)
-                    
-                    
-                    return JsonResponse({"message" : "Leave status updated"}, status=200)
+                    leave_status = serializer.validated_data.get('leave_status')
+
+                    leave = Leaves.objects.get(pk=leave_id)                       
+                    employee = CustomUser.objects.get(email=leave.employee)
+                    manager_id = employee.manager_id                       
+
+                    # Check manager aprroving leave is same as manager of employee applied leave
+                    if manager_id==user_id:
+                        if leave_status==1:
+                            leave.leave_status = 1
+                            leave.save()
+                        elif leave_status==3:
+                            leave.leave_status = 3
+                            leave.save()
+                        else:
+                            return JsonResponse({"message" : "Invalid status code"}, status=400)
+                        SendEmail(str(leave.employee), leave)
+                        print("from update",leave.leave_status)                       
+                        return JsonResponse({"message" : "Leave status updated"}, status=200)
+                    else:
+                        return JsonResponse({"message" : "Don't have permission to perform this task"}, status=401)
                 else:
                     return JsonResponse({"error": serializer.errors},status=400)
             else:
                 return JsonResponse({"message": "Unauthorized to perform this task"}, status=401)
+        except Leaves.DoesNotExist:
+                        return JsonResponse({"error" : "Leave does not exist"}, status=404)
         except CustomUser.DoesNotExist:
             return JsonResponse({"message": "User does not exist"}, status=404)
         except Exception as error:
             return JsonResponse({"error": str(error)},status=500)
         
-# To reject the leave   
-class RejectLeave(APIView):
-    def put(self, request):
-        try:
-            serializer = UpdateLeaveSerializer(data = request.data)
-            if serializer.is_valid():
-                leave_id = serializer.validated_data.get('leave_id')
-                try:
-                    leave = Leaves.objects.get(pk=leave_id)
-                except Leaves.DoesNotExist:
-                    return JsonResponse({"error" : "Leave does not exist"}, status=404)
-                
-                leave.leave_status = 3
-                leave.save()
-                
-                return JsonResponse({"message" : "Leave rejected and status updated"}, status=200)
-            else:
-                return JsonResponse({"error": serializer.errors},status=400)
-        except Exception as error:
-            return JsonResponse({"error": str(error)},status=500)
         
 
 # To delete the leave   
@@ -150,18 +143,18 @@ class DeleteLeave(APIView):
             if leave.leave_status == 0:
                 leave.leave_status=7
                 leave.save()
-                SendEmail(str(leave.employee), leave.leave_status_text)
+                SendEmail(str(leave.employee), leave)
                 leave.delete()
                 return JsonResponse({"message" : "Leave delete successfully"}, status=200)
 
             elif leave.leave_status==2 or leave.leave_status==4:
                 leave.leave_status=5
                 leave.save()
-                SendEmail(str(leave.employee), leave.leave_status_text)          
+                SendEmail(str(leave.employee), leave)          
                 return JsonResponse({"message" : "Leave delete successfully"}, status=200)
         
         except Leaves.DoesNotExist:
-                return JsonResponse({"error" : "Leave does not exist"}, status=404)    
+            return JsonResponse({"error" : "Leave does not exist"}, status=404)    
         except Exception as error:
             return JsonResponse({"error": str(error)},status=500)
 
@@ -192,7 +185,7 @@ class ViewEmployeeLeaves(APIView):
             
             return JsonResponse({'Leaves' : serializer.data},status=200)  
         except CustomUser.DoesNotExist:
-                        return JsonResponse({'error': 'User does not exist'}, status=404)  
+            return JsonResponse({'error': 'User does not exist'}, status=404)  
         except Exception as error:
             return JsonResponse({"error": str(error)},status=500)
 

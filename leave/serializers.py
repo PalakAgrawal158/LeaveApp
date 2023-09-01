@@ -22,3 +22,4 @@ class AllLeavesSerializer(serializers.ModelSerializer):
 
 class UpdateLeaveSerializer(serializers.Serializer):
     leave_id = serializers.CharField()
+    leave_status = serializers.IntegerField()
