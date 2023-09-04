@@ -29,13 +29,8 @@ class AddLeave(APIView):
                            
             serializer = LeavesSerializer(data = request.data)
             if serializer.is_valid():
-                manager_email= user.manager
-                
-                leave=serializer.save(employee=user)
-                print(serializer.data)
-                print("llll",leave)
-
-                default_leave_text = Leaves._meta.get_field('leave_status_text').default
+                manager_email= user.manager             
+                leave=serializer.save(employee=user)                
                 SendEmail(str(manager_email), leave)
                 return JsonResponse({'message' : 'Leave added successfully'},status=200) 
             else:
@@ -64,11 +59,15 @@ class ViewPendingLeaves(APIView):
               
             # authenticate manager or not
             if user.is_manager:
-                leaves = Leaves.objects.filter(leave_status=0)  
-                if not leaves:
-                    return JsonResponse({"message": "No pending leaves found"}, status=404)
-                serializer = AllLeavesSerializer(leaves, many=True)
-                return JsonResponse({"Leaves": serializer.data}, status= 200)
+                employees = CustomUser.objects.filter(manager=user_id)
+                if employees:
+                    leaves = Leaves.objects.filter(leave_status=0, employee__in=employees)  
+                    if not leaves:
+                        return JsonResponse({"message": "No pending leaves found"}, status=404)
+                    serializer = AllLeavesSerializer(leaves, many=True)
+                    return JsonResponse({"Leaves": serializer.data}, status= 200)
+                else:
+                    return JsonResponse({"message": "No employees found with this manager"}, status=404)
             else:
                 return JsonResponse({"message": "Unauthorized to perform this task"}, status=401)
         except CustomUser.DoesNotExist:

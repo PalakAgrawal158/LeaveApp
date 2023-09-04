@@ -48,19 +48,3 @@ def SendEmail(email, leave):
 
 
 
-
-# @csrf_exempt
-# def email():
-#     try:
-#         port = 587  # For starttls
-#         smtp_server = settings.EMAIL_HOST
-#         sender_email = settings.EMAIL_HOST_USER
-#         receiver_email = email
-#         password = settings.EMAIL_HOST_PASSWORD
-
-#         message = f"""\
-#         Leave Status"""
-
-#     except Exception as error:
-#         print("Error", error)
-#         return False

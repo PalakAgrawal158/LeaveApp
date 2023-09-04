@@ -162,4 +162,6 @@ EMAIL_HOST = 'smtp-mail.outlook.com'
 EMAIL_USE_TLS = False
 EMAIL_PORT = 587
 EMAIL_USE_SSL = False
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
 

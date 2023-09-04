@@ -10,14 +10,12 @@ def update_status_5min():
     delete_aproval_pending = Leaves.objects.filter(leave_status=5)
     # print("current 5 time",datetime.now())
     if approved_progress_leaves:
-        print("1to2")
         for leave in approved_progress_leaves:
             leave.leave_status=2
             leave.save()
             SendEmail(str(leave.employee), leave)
     
     if delete_aproval_pending:
-        print("5to6")
         for leave in delete_aproval_pending:
             leave.leave_status=6
             leave.save()
@@ -50,8 +48,8 @@ def test():
 def update_scheduler():
     try:
         scheduler = BackgroundScheduler()
-        scheduler.add_job(update_status_5min, 'cron', minute="*/5")
-        scheduler.add_job(update_status_10min, 'cron', minute="*/10")
+        scheduler.add_job(update_status_5min, 'cron', minute="*/1")
+        scheduler.add_job(update_status_10min, 'cron', minute="*/2")
         # scheduler.add_job(test, 'cron', hour= 15,minute = 44,second=5)
         scheduler.start()
     except Exception as error:

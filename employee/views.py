@@ -28,16 +28,16 @@ class RegisterUser(APIView):
             return JsonResponse({"error": str(error)},status=500)
 
 
-def generate_jwt_token(user):
-    payload = {
-        "token_type": "access",
-        'user_id': user.id,
-        'email': user.email,
-        'is_manager': user.is_manager,  # Add is_manager to payload
-        'exp': datetime.now() + timedelta(days=1)
-    }
-    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-    return token.decode('utf-8')
+# def generate_jwt_token(user):
+#     payload = {
+#         "token_type": "access",
+#         'user_id': user.id,
+#         'email': user.email,
+#         'is_manager': user.is_manager,  # Add is_manager to payload
+#         'exp': datetime.now() + timedelta(days=1)
+#     }
+#     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+#     return token.decode('utf-8')
 
 
 class LoginUser(APIView):
@@ -120,3 +120,4 @@ class ListEmployeesByManager(APIView):
         except Exception as error:
             print(error)
             return JsonResponse({"error":str(error)},status=500)
+
